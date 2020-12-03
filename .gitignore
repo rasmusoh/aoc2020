@@ -1,5 +1,6 @@
+.vim
 .cache/
 dist/
 node_modules/
-.swp
-.swo
+*.swp
+*.swo
