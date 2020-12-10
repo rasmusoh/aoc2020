@@ -2,10 +2,10 @@ from fileinput import input
 from operator import sub
 
 joltages = [int(line)
-            for line in input('data/day10.test2.txt') if line.strip()]
+            for line in input('data/day10.txt') if line.strip()]
 joltages.sort()
 connect_to = joltages.copy()
-joltages.append(0)
+joltages.insert(0, 0)
 connect_to.append(max(joltages)+3)
 
 # part 1
@@ -15,10 +15,10 @@ print(diffs.count(1)*diffs.count(3))
 
 MAX_JUMP = 3
 paths = [0]*len(joltages)
-paths[-1] = 1  # one path from last to
+paths[-1] = 1  # one path from last to last - 1
 
 
-def count_paths(joltages, paths,  start=0):
+def count_paths(joltages, paths, start=0):
     if paths[start]:
         return paths[start]
     i = start+1
