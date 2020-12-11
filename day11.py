@@ -1,38 +1,57 @@
 from fileinput import input
+import os
 from time import sleep
-import curses
+from copy import deepcopy
 
-seatmap = [line.rstrip() for line in input(
-    'data/day11.test.txt') if line.rstrip()]
+seatmap = [list(line.rstrip())for line in input(
+    'data/day11.txt') if line.rstrip()]
 
-SPEED = 10
+SPEED = 30
+
+directions = {(1, 0), (1, 1), (0, 1), (-1, 1),
+              (-1, 0), (-1, -1), (0, -1), (1, -1)}
+
+
+def total_occupied(seats):
+    return len([seat for row in seats
+                for seat in row if seat == '#'])
+
+
+def look_direction(seats, x, y, direction):
+    while True:
+        x += direction[0]
+        y += direction[1]
+        if not (0 <= x < len(seats[0]) and 0 <= y < len(seats)):
+            return 0
+        if seats[y][x] == 'L':
+            return 0
+        if seats[y][x] == '#':
+            return 1
 
 
 def update_map(seats):
-    new = [x[:] for x in seats]
-    for i in range(len(seats)):
-        for j in range(len(seats[0])):
-            adjacent_i = slice(max( i-1, 0), min(i+2, len(seats)))
-            adjacent_j = slice(max( j-1, 0), min(j+2, len(seats[0])))
-            surroundings = seats[adjacent_i][adjacent_j]
-            print(surroundings)
+    new = deepcopy(seats)
+    for y in range(len(seats)):
+        for x in range(len(seats[0])):
+            if seats[y][x] == '.':
+                continue
+            occupied = 0
+            for direction in directions:
+                occupied += look_direction(seatmap, x, y, direction)
+            if occupied == 0:
+                new[y][x] = '#'
+            elif occupied >= 5:
+                new[y][x] = 'L'
+    return new
 
 
-def main(stdscr):
-    stdscr.clear()
-    curses.curs_set(False)  # remove cursor highlight
-
-    while True:
-        for i in range(len(seatmap)):
-            stdscr.addstr(i, 0, seatmap[i])
-        stdscr.refresh()
-        sleep(1/SPEED)
-        seatmap = update_map(seatmap)
-    stdscr.refresh()
-
-    while ((ch := stdscr.getch()) == -1):  # -1 means no more input
-        pass
-
-
-#curses.wrapper(main)
-update_map(seatmap)
+while True:
+    os.system('cls' if os.name == 'nt' else 'clear')
+    for row in seatmap:
+        print(''.join(row))
+    print(f'occupied:{total_occupied(seatmap)}')
+    new_map = update_map(seatmap)
+    if new_map == seatmap:
+        break
+    seatmap = new_map
+    sleep(1/SPEED)
