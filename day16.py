@@ -20,23 +20,7 @@ your_ticket = parse_ticket(your_ticket[1])
 tickets = [parse_ticket(x) for x in tickets[1:] if x.strip()]
 
 
-def validate_field(field):
-    for from1, to1, from2, to2 in field_ranges.values():
-        if from1 <= field <= to1 or from2 <= field <= to2:
-            return True
-    return False
-
-
-def get_error_rate(ticket):
-    return sum([field for field in ticket if not validate_field(field)])
-
-
-print(sum(map(get_error_rate, tickets)))
-
-# part 2
-
-
-def get_valid_fields(value):
+def valid_for_fields(value):
     fields = set()
     for field in field_ranges:
         from1, to1, from2, to2 = field_ranges[field]
@@ -45,29 +29,32 @@ def get_valid_fields(value):
     return fields
 
 
-valid_tickets = list(filter(lambda t: all(map(validate_field, t)), tickets))
-valid_fields = [0]*len(your_ticket)
-for i in range(len(your_ticket)):
-    valid_fields[i] = set(field_ranges.keys())
-    for ticket in valid_tickets:
-        valid_fields[i] &= get_valid_fields(ticket[i])
+def get_error_rate(ticket):
+    return sum([value for value in ticket if not valid_for_fields(value)])
 
+
+print(sum(map(get_error_rate, tickets)))
+
+# part 2
+
+valid_tickets = list(filter(lambda t: all(map(valid_for_fields, t)), tickets))
+
+possible_fields = []
+for i in range(len(your_ticket)):
+    fields = valid_for_fields(your_ticket[i])
+    for ticket in valid_tickets:
+        fields &= valid_for_fields(ticket[i])
+    possible_fields.append(fields)
 
 field_position_map = {}
-
-
-def determine_next_field():
-    for i, fields in enumerate(valid_fields):
-        if i not in field_position_map.values() and len(fields) == 1:
-            field_position_map[next(iter(fields))] = i
-            for j in range(len(valid_fields)):
-                if i != j:
-                    valid_fields[j] -= fields
-            return
-
-
-for i in range(len(your_ticket)):
-    determine_next_field()
+for _ in range(len(your_ticket)):
+    for i, fields in enumerate(possible_fields):
+        if len(fields) == 1:
+            field = next(iter(fields))
+            field_position_map[field] = i
+            for position in possible_fields:
+                position.discard(field)
+            break
 
 dep_fields = [your_ticket[field_position_map[field]]
               for field in field_position_map if field.startswith('departure')]
