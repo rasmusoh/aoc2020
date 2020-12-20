@@ -3,7 +3,7 @@ import math
 import fileinput
 
 tileinputs = [group.split('\n') for group in ''.join(
-    fileinput.input('data/day20.test.txt')).split('\n\n') if group]
+    fileinput.input('data/day20.txt')).split('\n\n') if group]
 seamonster = []
 seamonster_height = 0
 seamonster_width = 0
@@ -36,16 +36,22 @@ def rside(tile):
     return tiles[tile][:, -1]
 
 
+def transformations(tile):
+    for _ in range(2):
+        for _ in range(4):
+            yield tile
+            tile = np.rot90(tile)
+        tile = np.fliplr(tile)
+
+
 def solve_one_tile(left, right, free_tiles):
     for tile in free_tiles:
-        for _ in range(2):
-            for _ in range(4):
-                if (rside(tile) == left).all():
-                    return tile, "left"
-                elif (lside(tile) == right).all():
-                    return tile, "right"
-                tiles[tile] = np.rot90(tiles[tile])
-            tiles[tile] = np.fliplr(tiles[tile])
+        for transformation in transformations(tiles[tile]):
+            tiles[tile] = transformation
+            if (rside(tile) == left).all():
+                return tile, "left"
+            elif (lside(tile) == right).all():
+                return tile, "right"
 
 
 def solve_strip(start_id, free_tiles):
@@ -53,7 +59,7 @@ def solve_strip(start_id, free_tiles):
     start = tiles[start_id]
     left = start[:, 0]
     right = start[:, -1]
-    for i in range(side_length-1):
+    for _ in range(side_length-1):
         tile, side = solve_one_tile(left, right, free_tiles - set(strip))
         if side == 'left':
             left = lside(tile)
@@ -70,37 +76,38 @@ def solve_board(start_id):
     strips = []
     free_tiles -= set(strip)
     for tile in strip:
-        tiles[tile] = np.rot90(tiles[tile])
+        tiles[tile] = np.rot90(tiles[tile], 3)
         strips.append(solve_strip(tile, free_tiles))
         free_tiles -= set(strips[-1])
     return strips
 
 
 def connect_board(board):
-    tile_size = np.size(tiles[board[0][0]], 1)
-    size = len(board)*(tile_size) - (len(board)-1)
-    connected = np.zeros((size, size), dtype=int)
+    tile_size = np.size(tiles[board[0][0]], 1) - 2
+    full_size = len(board)*(tile_size)
+    connected = np.zeros((full_size, full_size), dtype=int)
     for i, row in enumerate(board):
         for j, tile in enumerate(row):
-            start_y = i*(tile_size-1)
-            start_x = j*(tile_size-1)
-            connected[start_x:start_x+tile_size,
-                      start_y:start_y+tile_size] = tiles[tile]
+            connected[i*tile_size:(i+1)*tile_size,
+                      j*tile_size:(j+1)*tile_size] = tiles[tile][1:-1, 1:-1]
     return connected
 
 
 def find_monsters(board):
-    count=0
-    for i in range(np.size(board,0)-seamonster_height):
-        for j in range(np.size(board,1)-seamonster_width):
-            if all(map(lambda p: board[i+p[0],j+p[1]] == 1, seamonster)):
-                count+=1
-    return count
+    monsters = []
+    for i in range(np.size(board, 0)-seamonster_height+1):
+        for j in range(np.size(board, 1)-seamonster_width):
+            if all(map(lambda p: board[i+p[0], j+p[1]] == 1, seamonster)):
+                monsters.append((i, j))
+    return monsters
 
-connected = connect_board(solve_board(3079))
-for _ in range(2):
-    for _ in range(4):
-        monsters = find_monsters(connected)
-        print(monsters)
-        connected = np.rot90(connected)
-    connected = np.fliplr(connected)
+
+solved = solve_board(next(iter(tiles.keys())))
+print(solved[0][0]*solved[0][-1]*solved[-1][0]*solved[-1][-1])
+connected = connect_board(solved)
+
+for trans in transformations(connected):
+    monsters = find_monsters(trans)
+    if len(monsters) > 0:
+        print(np.sum(trans) - len(monsters)*len(seamonster))
+        break
