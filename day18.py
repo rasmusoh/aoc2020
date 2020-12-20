@@ -1,6 +1,11 @@
 import re
 import fileinput
 
+precedence = {
+    '+': 2,
+    '*': 1
+}
+
 esum = 0
 for line in fileinput.input('data/day18.txt'):
     tokens = line.rstrip().replace(' ', '')
@@ -12,7 +17,7 @@ for line in fileinput.input('data/day18.txt'):
         elif token == '+' or token == '*':
             while operators and \
                     (operators[-1] != '(') and \
-                    not (operators[-1] == '*' and token == '+'):
+                    not precedence[operators[-1]] < precedence[token]:
                 output.append(operators.pop())
             operators.append(token)
         elif token == '(':
