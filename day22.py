@@ -39,7 +39,7 @@ def play(player1, player2, subgame=1):
 
 
 winner_p, winner_deck = play(player1, player2)
-print(winner_p, winner_deck)
 score = sum(map(operator.mul, winner_deck,
                 reversed(range(1, 1+len((winner_deck))))))
-print(score)
+print(
+    f'--- Winner: Player {winner_p} --- Score: {score} --- Deck: {winner_deck}')
