@@ -10,7 +10,6 @@ class Cup:
     def __str__(self):
         return f'{str(self.label)}'
 
-
 class Cups:
     def __init__(self, labels):
         labelsiter = iter(labels)
@@ -43,15 +42,13 @@ class Cups:
         pickup_labels = [pickup1.label, pickup2.label, pickup3.label]
 
         dest_node = None
-        dest = self.current.label
+        dest_label = self.current.label
         while not dest_node:
-            dest = (dest - 1) % self.n
-            dest = dest if dest > 0 else self.n
-            if dest not in pickup_labels:
-                dest_node = self.bylabel[dest]
-        temp = dest_node.next
-        dest_node.next = pickup1
-        pickup3.next = temp
+            dest_label -= 1 
+            dest_label = dest_label if dest_label > 0 else self.n
+            if dest_label not in pickup_labels:
+                dest_node = self.bylabel[dest_label]
+        dest_node.next, pickup3.next = pickup1, dest_node.next
 
         self.current = self.current.next
 
