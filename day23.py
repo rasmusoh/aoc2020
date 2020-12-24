@@ -1,3 +1,5 @@
+import time
+
 test = '389125467'
 real = '589174263'
 
@@ -33,24 +35,25 @@ class Cups:
             node = node.next
         return ' '.join(nodes)
 
-    def move(self):
-        self.moves += 1
-        pickup1 = self.current.next
-        pickup2 = pickup1.next
-        pickup3 = pickup2.next
-        self.current.next = pickup3.next
-        pickup_labels = [pickup1.label, pickup2.label, pickup3.label]
+    def move(self, moves):
+        for _ in range(moves):
+            self.moves += 1
+            pickup1 = self.current.next
+            pickup2 = pickup1.next
+            pickup3 = pickup2.next
+            self.current.next = pickup3.next
+            pickup_labels = [pickup1.label, pickup2.label, pickup3.label]
 
-        dest_node = None
-        dest_label = self.current.label
-        while not dest_node:
-            dest_label -= 1 
-            dest_label = dest_label if dest_label > 0 else self.n
-            if dest_label not in pickup_labels:
-                dest_node = self.bylabel[dest_label]
-        dest_node.next, pickup3.next = pickup1, dest_node.next
+            dest_node = None
+            dest_label = self.current.label
+            while not dest_node:
+                dest_label -= 1 
+                dest_label = dest_label if dest_label > 0 else self.n
+                if dest_label not in pickup_labels:
+                    dest_node = self.bylabel[dest_label]
+            dest_node.next, pickup3.next = pickup1, dest_node.next
 
-        self.current = self.current.next
+            self.current = self.current.next
 
 
 elements = 1000000
@@ -59,8 +62,9 @@ original = list(map(lambda x: int(x), real))
 print(original)
 total = original+list(range(len(original)+1, elements+1))
 cups = Cups(total)
-for _ in range(moves):
-    cups.move()
+start = time.time()
+cups.move(moves)
+print(f'elapsed time: {time.time() -start}')
 
 a = cups.bylabel[1].next
 b = a.next
